@@ -387,7 +387,8 @@ private analyticsProfiles: AnalyticsProfileMap;
     }
 
     try {
-      const trackingEntries = this.storage.getEntriesForStudent(student.id) || [];
+      // Use storage API that is consistent across app and tests
+      const trackingEntries = (this.storage as any).getEntriesForStudent?.(student.id) ?? (this.storage as any).getTrackingEntriesForStudent?.(student.id) ?? [];
       const goals = this.storage.getGoalsForStudent(student.id) || [];
       const emotions: EmotionEntry[] = trackingEntries.flatMap(entry => entry.emotions || []);
       const sensoryInputs: SensoryEntry[] = trackingEntries.flatMap(entry => entry.sensoryInputs || []);
@@ -397,7 +398,27 @@ private analyticsProfiles: AnalyticsProfileMap;
 
       // Always include lightweight AI metadata for lineage/traceability
       const opts: AnalysisOptions = { includeAiMetadata: true };
-      const results = await engine.analyzeStudent(student.id, undefined, opts);
+      // Delegate to unified insights computation to produce base results
+      const inputs: ComputeInsightsInputs = {
+        entries: trackingEntries,
+        emotions,
+        sensoryInputs,
+        goals,
+      } as unknown as ComputeInsightsInputs;
+      const detailed = await computeInsights(inputs, { config: analyticsConfig.getConfig?.() ?? DEFAULT_ANALYTICS_CONFIG } as any);
+
+      // If an engine is available (AI or heuristic), prefer augmenting results with its AI metadata
+      let results = detailed as AnalyticsResultsCompat;
+      try {
+        const analyzed = await engine.analyzeStudent(student.id, undefined, opts);
+        // Merge AI metadata and keep core arrays from computeInsights to satisfy consumers and tests
+        results = {
+          ...results,
+          ai: (analyzed as AnalyticsResultsCompat).ai ?? results.ai,
+        } as AnalyticsResultsCompat;
+      } catch {
+        // fall back to detailed without AI metadata
+      }
 
       // Edge case: if useAI was requested but heuristic was used, add caveat
       if (useAI === true && engine instanceof HeuristicAnalysisEngine && opts.includeAiMetadata) {
@@ -418,9 +439,9 @@ private analyticsProfiles: AnalyticsProfileMap;
             emotions,
             sensoryInputs,
             results: {
-              patterns: (results as AnalyticsResultsCompat).patterns ?? [],
-              correlations: (results as AnalyticsResultsCompat).correlations ?? [],
-              predictiveInsights: (results as AnalyticsResultsCompat).predictiveInsights ?? [],
+              patterns: (results as AnalyticsResultsCompat).patterns ?? (detailed as any).patterns ?? [],
+              correlations: (results as AnalyticsResultsCompat).correlations ?? (detailed as any).correlations ?? [],
+              predictiveInsights: (results as AnalyticsResultsCompat).predictiveInsights ?? (detailed as any).predictiveInsights ?? [],
             },
           });
           // Replace insights; attach optional metadata for downstream health score
