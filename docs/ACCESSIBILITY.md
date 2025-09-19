@@ -1,6 +1,7 @@
 # Accessibility Guidelines
 
-This document outlines the accessibility guarantees and developer guidance for maintaining and improving accessibility in the application.
+This document outlines the accessibility guarantees and developer guidance for maintaining and
+improving accessibility in the application.
 
 ## Core Accessibility Features
 
@@ -14,6 +15,7 @@ The application provides a global "Skip to main content" link that:
 - Is fully internationalized (English and Norwegian)
 
 **Implementation Details:**
+
 - The skip link is rendered by `AccessibilityWrapper` at the app root
 - Focus management includes both focus shifting and scrolling to content
 - The link is visually hidden by default but becomes visible on focus
@@ -135,7 +137,9 @@ Before committing:
 
 ## Overlay layering policy (z-index)
 
-To prevent tooltips/popovers/hover cards from being clipped by tabs or headers, use shared overlay tokens rather than magic numbers. These classes are defined in `src/index.css` under `@layer utilities`:
+To prevent tooltips/popovers/hover cards from being clipped by tabs or headers, use shared overlay
+tokens rather than magic numbers. These classes are defined in `src/index.css` under
+`@layer utilities`:
 
 ```
 // Tokens
@@ -156,7 +160,8 @@ Guidelines:
 
 - Prefer the primitive defaults (no extra class) unless the overlay must sit above other overlays.
 - Do not introduce new raw z-index numbers in feature code. Use the tokens above.
-- If you add an `overflow: hidden` container near overlay triggers, verify that overlays still render correctly; consider portaling content to body if needed.
+- If you add an `overflow: hidden` container near overlay triggers, verify that overlays still
+  render correctly; consider portaling content to body if needed.
 
 ## ARIA Best Practices
 

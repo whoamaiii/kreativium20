@@ -133,7 +133,8 @@ npm run lighthouse:view  # View Lighthouse results
 
 - Use orchestrator named exports from `src/lib/analyticsManager` for cache keys and summaries:
   - `buildInsightsCacheKey`, `buildInsightsTask`, `getInsights`
-- Profiles are managed by `src/lib/analyticsProfiles.ts` (no direct localStorage access in feature code).
+- Profiles are managed by `src/lib/analyticsProfiles.ts` (no direct localStorage access in feature
+  code).
 - Mock/demo data seeding is opt-in via `src/lib/mock/mockSeeders.ts` and never automatic.
 
 ```

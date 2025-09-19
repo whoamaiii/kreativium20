@@ -1,10 +1,14 @@
 # Color System Style Guide
 
-This document outlines the color system used in this project, which is based on a semantic token architecture. Adhering to these guidelines ensures visual consistency, maintainability, and accessibility across the application.
+This document outlines the color system used in this project, which is based on a semantic token
+architecture. Adhering to these guidelines ensures visual consistency, maintainability, and
+accessibility across the application.
 
 ## 1. Semantic Color Tokens
 
-All colors are defined as CSS variables in `src/index.css` and exposed through Tailwind CSS utility classes. Avoid using hard-coded hex values or raw `rgb()`/`hsl()` colors directly in components. Instead, use the semantic tokens defined below.
+All colors are defined as CSS variables in `src/index.css` and exposed through Tailwind CSS utility
+classes. Avoid using hard-coded hex values or raw `rgb()`/`hsl()` colors directly in components.
+Instead, use the semantic tokens defined below.
 
 ### Core Palette
 
@@ -28,17 +32,22 @@ All colors are defined as CSS variables in `src/index.css` and exposed through T
 
 ## 2. Usage in Components
 
-When styling components, use the Tailwind CSS utility classes that correspond to the semantic tokens. For example, to set the text color to the primary brand color, use `text-primary`.
+When styling components, use the Tailwind CSS utility classes that correspond to the semantic
+tokens. For example, to set the text color to the primary brand color, use `text-primary`.
 
 ### Soft Backgrounds
 
-For badges, pills, and other elements that require a softer background color, use the `bg-*-soft` classes. For example, `bg-success-soft` will apply a soft green background color.
+For badges, pills, and other elements that require a softer background color, use the `bg-*-soft`
+classes. For example, `bg-success-soft` will apply a soft green background color.
 
 ## 3. Usage in Charts
 
-ECharts and other charting libraries require final color strings, not CSS variables. To ensure consistency with the design system, use the `chartColor` helper function located in `src/lib/chartColor.ts`.
+ECharts and other charting libraries require final color strings, not CSS variables. To ensure
+consistency with the design system, use the `chartColor` helper function located in
+`src/lib/chartColor.ts`.
 
-This helper function reads the HSL values from the CSS variables and converts them to RGBA strings that can be used by the charting libraries. It also supports alpha transparency.
+This helper function reads the HSL values from the CSS variables and converts them to RGBA strings
+that can be used by the charting libraries. It also supports alpha transparency.
 
 **Example:**
 
@@ -59,7 +68,11 @@ const chartOptions = {
 
 **Important:**
 
-- **Do not use raw hex/hsl strings in ECharts configs.** Always use the `chartColor` helper to ensure that the chart colors are consistent with the design system.
-- **Provide SSR-safe fallbacks.** The `chartColor` helper requires a fallback HSL value to be provided in case the CSS variable is not available on the server. This is important for ensuring that the charts render correctly on the server.
+- **Do not use raw hex/hsl strings in ECharts configs.** Always use the `chartColor` helper to
+  ensure that the chart colors are consistent with the design system.
+- **Provide SSR-safe fallbacks.** The `chartColor` helper requires a fallback HSL value to be
+  provided in case the CSS variable is not available on the server. This is important for ensuring
+  that the charts render correctly on the server.
 
-By following these guidelines, we can ensure that the color system remains consistent, maintainable, and accessible across the entire application.
+By following these guidelines, we can ensure that the color system remains consistent, maintainable,
+and accessible across the entire application.

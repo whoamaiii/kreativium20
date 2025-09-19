@@ -296,6 +296,7 @@ graph LR
 - Update all try-catch blocks to use standardized handling
 
 ### Task 5: Performance Optimizations
+
 ### Task 6: PDF Export Pipeline Enhancements (In Progress)
 
 **Subtasks:**

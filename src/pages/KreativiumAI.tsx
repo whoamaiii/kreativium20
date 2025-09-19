@@ -8,12 +8,12 @@ import { Sparkles, Play, RefreshCw, Database, Clock, Info, AlertTriangle, Loader
 import { dataStorage } from '@/lib/dataStorage';
 import type { Student } from '@/types/student';
 import { LLMAnalysisEngine } from '@/lib/analysis/llmAnalysisEngine';
-import type { AnalyticsResultsAI } from '@/lib/analysis/analysisEngine';
+import type { AnalyticsResultsAI, TimeRange } from '@/lib/analysis/analysisEngine';
 import { loadAiConfig } from '@/lib/aiConfig';
 import { openRouterClient } from '@/lib/ai/openrouterClient';
 import { logger } from '@/lib/logger';
 import { Toggle } from '@/components/ui/toggle';
-import { computeComparisonRange, formatComparisonPeriodLabel } from '@/lib/analysis/dateHelpers';
+import { computeComparisonRange, formatComparisonPeriodLabel, type ComparisonMode } from '@/lib/analysis/dateHelpers';
 import { ComparisonSummary } from '@/components/ComparisonSummary';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatAiReportText, downloadPdfFromText } from '@/lib/ai/exportAiReport';
@@ -21,29 +21,81 @@ import { aiMetrics } from '@/lib/ai/metrics';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { announceToScreenReader } from '@/utils/accessibility';
 import { resolveSources } from '@/lib/evidence';
+import type { EvidenceSource } from '@/lib/evidence';
 
 type Preset = 'all' | '7d' | '30d' | '90d';
 
-function computeRange(preset: Preset) {
+type DataQualityBuckets = Record<'morning' | 'afternoon' | 'evening', number>;
+
+interface DataQualitySummary {
+  total: number;
+  last: Date | null;
+  daysSince: number | null;
+  completeness: number;
+  balance: number;
+  buckets: DataQualityBuckets;
+  avgIntensity: number | null;
+}
+
+interface ConcreteTimeRange extends TimeRange {
+  start: Date;
+  end: Date;
+}
+
+function computeRange(preset: Preset): ConcreteTimeRange | undefined {
   if (preset === 'all') return undefined;
   const now = new Date();
+  const end = new Date(now);
   const start = new Date(now);
   const days = preset === '7d' ? 7 : preset === '30d' ? 30 : 90;
   start.setDate(now.getDate() - days);
-  return { start, end: now, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone } as const;
+  return {
+    start,
+    end,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
 }
 
-function computeDataQualityMetrics(studentId: string, timeframe?: ReturnType<typeof computeRange>) {
+function toConcreteTimeRange(range: TimeRange): ConcreteTimeRange {
+  const start = range.start instanceof Date ? range.start : new Date(range.start);
+  const end = range.end instanceof Date ? range.end : new Date(range.end);
+  return {
+    start,
+    end,
+    timezone: range.timezone,
+  };
+}
+
+function formatRangeCacheKey(range: ConcreteTimeRange | undefined): string {
+  if (!range) return 'all';
+  return `${range.start.toISOString()}_${range.end.toISOString()}`;
+}
+
+function formatDateForDisplay(date: Date): string {
+  return date.toLocaleDateString();
+}
+
+function getToolbarStorageKey(students: Student[], currentStudentId: string, range: ConcreteTimeRange | undefined): string {
+  const studentName = students.find((st) => st.id === currentStudentId)?.name || 'elev';
+  const normalizedStudent = studentName.toLowerCase();
+  const rangeLabel = range
+    ? `${formatDateForDisplay(range.start)}_${formatDateForDisplay(range.end)}`.toLowerCase()
+    : 'alle';
+  return `ai_toolbar_last_${normalizedStudent}_${rangeLabel}`;
+}
+
+function computeDataQualityMetrics(studentId: string, timeframe?: ConcreteTimeRange): DataQualitySummary | null {
   try {
     if (!studentId) return null;
     const entriesAll = dataStorage.getEntriesForStudent(studentId) || [];
-    const { start, end } = timeframe || {};
-    const inRange = (start || end)
-      ? entriesAll.filter(e => {
-          const t = e.timestamp.getTime();
-          const s = start ? (start as Date).getTime() : -Infinity;
-          const en = end ? (end as Date).getTime() : Infinity;
-          return t >= s && t <= en;
+    const start = timeframe?.start;
+    const end = timeframe?.end;
+    const inRange = start || end
+      ? entriesAll.filter((entry) => {
+          const timestamp = entry.timestamp.getTime();
+          const startMs = start ? start.getTime() : -Infinity;
+          const endMs = end ? end.getTime() : Infinity;
+          return timestamp >= startMs && timestamp <= endMs;
         })
       : entriesAll;
     const total = inRange.length;
@@ -51,7 +103,7 @@ function computeDataQualityMetrics(studentId: string, timeframe?: ReturnType<typ
     const daysSince = last ? Math.max(0, Math.round((Date.now() - last.getTime()) / (1000 * 60 * 60 * 24))) : null;
     const completeCount = inRange.filter(e => (e.emotions?.length || 0) > 0 && (e.sensoryInputs?.length || 0) > 0).length;
     const completeness = total > 0 ? Math.round((completeCount / total) * 100) : 0;
-    const buckets = { morning: 0, afternoon: 0, evening: 0 } as Record<'morning'|'afternoon'|'evening', number>;
+    const buckets: DataQualityBuckets = { morning: 0, afternoon: 0, evening: 0 };
     let totalIntensity = 0;
     let intensityCount = 0;
     for (const e of inRange) {
@@ -99,7 +151,7 @@ export default function KreativiumAI(): JSX.Element {
   const [compareMode, setCompareMode] = useState<'previous' | 'lastMonth' | 'lastYear'>('previous');
   const [toolbarLast, setToolbarLast] = useState<{ type: 'copy' | 'pdf' | 'share' | null; at: number | null }>({ type: null, at: null });
   const [iepSafeMode, setIepSafeMode] = useState<boolean>(true);  // Default ON for safety
-  const [resolvedSources, setResolvedSources] = useState<Map<string, any>>(new Map());
+  const [resolvedSources, setResolvedSources] = useState<Map<string, EvidenceSource>>(new Map());
 
   // Clear cache when IEP mode changes
   useEffect(() => {
@@ -120,9 +172,9 @@ export default function KreativiumAI(): JSX.Element {
       if (/^10\./.test(h)) return true;
       if (/^192\.168\./.test(h)) return true;
       if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h)) return true;
-      return Boolean((ai as any).localOnly);
+      return Boolean(ai.localOnly);
     } catch {
-      return Boolean((ai as any).localOnly) || quick;
+      return Boolean(ai.localOnly) || quick;
     }
   })();
 
@@ -140,22 +192,18 @@ export default function KreativiumAI(): JSX.Element {
     }
   }, []);
 
-  const timeframe = useMemo(() => computeRange(preset), [preset]);
+  const timeframe = useMemo<ConcreteTimeRange | undefined>(() => computeRange(preset), [preset]);
 
   const cacheKey = useMemo(() => {
-    const t = timeframe ? `${(timeframe.start as Date)?.toISOString?.() || String(timeframe.start)}_${(timeframe.end as Date)?.toISOString?.() || String(timeframe.end)}` : 'all';
+    const rangeKey = formatRangeCacheKey(timeframe);
     const cmp = compareEnabled && timeframe ? `|cmp:${compareMode}` : '';
-    return `${studentId || 'none'}|${preset}|${t}${cmp}|iep:${iepSafeMode ? 'on' : 'off'}`;
+    return `${studentId || 'none'}|${preset}|${rangeKey}${cmp}|iep:${iepSafeMode ? 'on' : 'off'}`;
   }, [studentId, preset, timeframe, compareEnabled, compareMode, iepSafeMode]);
 
   // Persist toolbar last action per student+range in session
   useEffect(() => {
     try {
-      const key = (() => {
-        const s = (students.find(st => st.id === studentId)?.name || 'elev').toLowerCase();
-        const r = timeframe ? `${(timeframe.start as Date).toLocaleDateString()}_${(timeframe.end as Date).toLocaleDateString()}`.toLowerCase() : 'alle';
-        return `ai_toolbar_last_${s}_${r}`;
-      })();
+      const key = getToolbarStorageKey(students, studentId, timeframe);
       const raw = sessionStorage.getItem(key);
       if (raw) {
         const saved = JSON.parse(raw) as { type: 'copy' | 'pdf' | 'share' | null; at: number | null };
@@ -167,11 +215,7 @@ export default function KreativiumAI(): JSX.Element {
 
   useEffect(() => {
     try {
-      const key = (() => {
-        const s = (students.find(st => st.id === studentId)?.name || 'elev').toLowerCase();
-        const r = timeframe ? `${(timeframe.start as Date).toLocaleDateString()}_${(timeframe.end as Date).toLocaleDateString()}`.toLowerCase() : 'alle';
-        return `ai_toolbar_last_${s}_${r}`;
-      })();
+      const key = getToolbarStorageKey(students, studentId, timeframe);
       sessionStorage.setItem(key, JSON.stringify(toolbarLast));
     } catch {}
   }, [toolbarLast, studentId, timeframe?.start, timeframe?.end, students]);
@@ -180,8 +224,8 @@ export default function KreativiumAI(): JSX.Element {
 
   const baselineDataQuality = useMemo(() => {
     if (!compareEnabled || !timeframe) return null;
-    const baselineRange = computeComparisonRange(timeframe as any, compareMode);
-    return computeDataQualityMetrics(studentId, baselineRange as any);
+    const baselineRange = toConcreteTimeRange(computeComparisonRange(timeframe, compareMode));
+    return computeDataQualityMetrics(studentId, baselineRange);
   }, [studentId, compareEnabled, timeframe, compareMode]);
 
   const hasSmallBaseline = useMemo(() => {
@@ -198,7 +242,7 @@ export default function KreativiumAI(): JSX.Element {
       const resp = await openRouterClient.chat([
         { role: 'system', content: 'Svar kun på norsk. Vær kort.' },
         { role: 'user', content: 'Si kun ordet: pong' },
-      ], { modelName: ai.modelName, baseUrl: ai.baseUrl, timeoutMs: 10_000, maxTokens: 8, temperature: 0, localOnly: (ai as any).localOnly });
+      ], { modelName: ai.modelName, baseUrl: ai.baseUrl, timeoutMs: 10_000, maxTokens: 8, temperature: 0, localOnly: ai.localOnly ?? false });
       setResults(null);
       // Model name is displayed via displayModelName; keep minimal state
       if (!resp?.content?.toLowerCase().includes('pong')) {

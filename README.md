@@ -1,24 +1,25 @@
 # Kreativium Beta v2
 
-Modern Vite + React + TypeScript app with an accessible, analytics-driven UI and strong testing, i18n, and performance practices.
+Modern Vite + React + TypeScript app with an accessible, analytics-driven UI and strong testing,
+i18n, and performance practices.
 
 ---
 
 ## Quickstart
 
-1) Install dependencies
+1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2) Start the dev server (Vite on port 5173)
+1. Start the dev server (Vite on port 5173)
 
 ```bash
 npm run dev
 ```
 
-3) Build and preview locally
+1. Build and preview locally
 
 ```bash
 npm run build
@@ -46,7 +47,7 @@ npm run preview
 
 ## Project Structure
 
-```
+```text
 src/
   components/     # Reusable UI components
   pages/          # Routed views
@@ -68,13 +69,14 @@ dist/             # Production build output
 
 ## Contributing
 
-1) Create a topic branch from `main`
-2) Commit using conventional style (e.g., `feat:`, `fix:`, `chore:`)
-3) Open a PR and include screenshots/accessibility notes as relevant
+1. Create a topic branch from `main`
+1. Commit using conventional style (e.g., `feat:`, `fix:`, `chore:`)
+1. Open a PR and include screenshots/accessibility notes as relevant
 
 ## License
 
 This project is licensed under the MIT License.
+
 <!-- Detailed historical notes retained below for context. -->
 
 ## About
@@ -85,9 +87,9 @@ This project was imported from the kreativiumbeta2 local development environment
 - **MLX Backend**: Python backend for machine learning inference
 - **Public folder**: Static assets and model configurations
 
-## Project Structure
+## Legacy Project Structure
 
-```
+```text
 kreativiumbeta2/
 ├── dist/              # Built application
 │   ├── assets/        # Bundled JavaScript and CSS
@@ -109,20 +111,23 @@ kreativiumbeta2/
 
 ## Deployment
 
-The `dist` folder contains the production-ready build that can be deployed to any static hosting platform.
+The `dist` folder contains the production-ready build that can be deployed to any static hosting
+platform.
 
 ## Configuration
 
 Model configurations are stored in `dist/models/gemma3-270m-it/` with:
+
 - `config.json` - Model configuration
 - `tokenizer_config.json` - Tokenizer settings
 
 ## Notes
 
-- Large binary files (*.onnx, *.bin, *.safetensors) are excluded from git
+- Large binary files (`*.onnx`, `*.bin`, `*.safetensors`) are excluded from git
 - WASM files are excluded due to size constraints
 - Python virtual environment is excluded from git
 
 ## Original Project
 
-This is a continuation of the KreativiumV17 project, representing the beta v2 iteration with enhanced ML capabilities and improved analytics.
+This is a continuation of the KreativiumV17 project, representing the beta v2 iteration with
+enhanced ML capabilities and improved analytics.

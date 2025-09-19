@@ -1,20 +1,33 @@
 ## 0.2.0 - 2025-08-14
 
 ### Changed
+
 - Analytics refactor: centralized cache keys and worker task builder
-  - Added buildInsightsCacheKey and buildInsightsTask in src/lib/insights/task.ts for deterministic keys, TTL resolution from runtime config, and typed worker envelopes with tags.
-  - useAnalyticsWorker now integrates cache-key builder, watchdog timeout with fallback processing, partial/progress handling, and rate-limited logging.
-  - analyticsManager reads cache TTL from analyticsConfig.cache.ttl and consistently returns minimal safe results on failures.
-- UI toast de-duplication: enforce single concurrent toast via TOAST_LIMIT = 1 in src/hooks/use-toast.ts; recommend updating existing toasts instead of adding new ones for repeated classes of errors.
+  - Added buildInsightsCacheKey and buildInsightsTask in src/lib/insights/task.ts for deterministic
+    keys, TTL resolution from runtime config, and typed worker envelopes with tags.
+  - useAnalyticsWorker now integrates cache-key builder, watchdog timeout with fallback processing,
+    partial/progress handling, and rate-limited logging.
+  - analyticsManager reads cache TTL from analyticsConfig.cache.ttl and consistently returns minimal
+    safe results on failures.
+- UI toast de-duplication: enforce single concurrent toast via TOAST_LIMIT = 1 in
+  src/hooks/use-toast.ts; recommend updating existing toasts instead of adding new ones for repeated
+  classes of errors.
 
 ### Added
-- Documentation: docs/analytics.md with analyticsManager API examples, guidance on using useAnalyticsWorker with buildInsightsTask, and error handling/toast deduping expectations.
+
+- Documentation: docs/analytics.md with analyticsManager API examples, guidance on using
+  useAnalyticsWorker with buildInsightsTask, and error handling/toast deduping expectations.
 
 ### Deprecated
-- Reading cache TTL from legacy locations (e.g., ANALYTICS_CONFIG.analytics.CACHE_TTL). Use analyticsConfig.cache.ttl instead.
+
+- Reading cache TTL from legacy locations (e.g., ANALYTICS_CONFIG.analytics.CACHE_TTL). Use
+  analyticsConfig.cache.ttl instead.
 
 ### Breaking Changes
-- If your code relied on legacy TTL keys or posted raw analytics worker messages without a cacheKey, you must migrate to the new analyticsConfig.cache.ttl and include cacheKey generated via buildInsightsCacheKey (or use buildInsightsTask).
+
+- If your code relied on legacy TTL keys or posted raw analytics worker messages without a cacheKey,
+  you must migrate to the new analyticsConfig.cache.ttl and include cacheKey generated via
+  buildInsightsCacheKey (or use buildInsightsTask).
 
 ## 0.1.1 - 2025-08-13
 

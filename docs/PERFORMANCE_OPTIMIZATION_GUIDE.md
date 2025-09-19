@@ -2,11 +2,13 @@
 
 ## 🎯 Performance Optimization Strategy
 
-This guide provides comprehensive patterns and best practices for optimizing React application performance, based on analysis of the current codebase.
+This guide provides comprehensive patterns and best practices for optimizing React application
+performance, based on analysis of the current codebase.
 
 ## 📊 Current Performance Issues Identified
 
 ### Critical Issues (Immediate Action Required)
+
 1. **setState in loops** - Causes multiple re-renders and performance degradation
 2. **Nested map operations** - O(n²) complexity in several components
 3. **Large inline functions in JSX** - Recreated on every render
@@ -14,6 +16,7 @@ This guide provides comprehensive patterns and best practices for optimizing Rea
 5. **Unmemoized expensive calculations** - Heavy computations in render path
 
 ### High Priority Issues
+
 - Excessive useEffect hooks (5+ in single components)
 - Array index as React key
 - Missing virtualization for large lists
@@ -24,6 +27,7 @@ This guide provides comprehensive patterns and best practices for optimizing Rea
 ### 1. Component Memoization
 
 #### ❌ Before (Current Issue)
+
 ```tsx
 // Component without memoization
 export const StudentCard = ({ student, data, onUpdate }) => {
@@ -33,40 +37,48 @@ export const StudentCard = ({ student, data, onUpdate }) => {
 ```
 
 #### ✅ After (Optimized)
+
 ```tsx
 import { memo } from 'react';
 
-export const StudentCard = memo(({ student, data, onUpdate }) => {
-  return <div>...</div>;
-}, (prevProps, nextProps) => {
-  // Custom comparison for deep equality if needed
-  return prevProps.student.id === nextProps.student.id &&
-         prevProps.data.length === nextProps.data.length;
-});
+export const StudentCard = memo(
+  ({ student, data, onUpdate }) => {
+    return <div>...</div>;
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison for deep equality if needed
+    return (
+      prevProps.student.id === nextProps.student.id &&
+      prevProps.data.length === nextProps.data.length
+    );
+  },
+);
 ```
 
 ### 2. Expensive Calculations with useMemo
 
 #### ❌ Before (Current Issue in CorrelationHeatmap)
+
 ```tsx
-const chartData = factors.map(factor1 => ({
+const chartData = factors.map((factor1) => ({
   id: factor1,
-  data: factors.map(factor2 => ({
+  data: factors.map((factor2) => ({
     x: factor2,
-    y: calculateCorrelation(factor1, factor2)
-  }))
+    y: calculateCorrelation(factor1, factor2),
+  })),
 }));
 ```
 
 #### ✅ After (Optimized)
+
 ```tsx
 const chartData = useMemo(() => {
-  return factors.map(factor1 => ({
+  return factors.map((factor1) => ({
     id: factor1,
-    data: factors.map(factor2 => ({
+    data: factors.map((factor2) => ({
       x: factor2,
-      y: calculateCorrelation(factor1, factor2)
-    }))
+      y: calculateCorrelation(factor1, factor2),
+    })),
   }));
 }, [factors]); // Only recalculate when factors change
 ```
@@ -74,50 +86,57 @@ const chartData = useMemo(() => {
 ### 3. Event Handler Optimization
 
 #### ❌ Before (Current Issue in GoalManager)
+
 ```tsx
-<Button onClick={() => {
-  const title = prompt("Milestone title:");
-  const description = prompt("Milestone description:");
-  if (title && description) {
-    addMilestone(goal.id, title, description, new Date());
-  }
-}}>
+<Button
+  onClick={() => {
+    const title = prompt('Milestone title:');
+    const description = prompt('Milestone description:');
+    if (title && description) {
+      addMilestone(goal.id, title, description, new Date());
+    }
+  }}
+>
   Add Milestone
 </Button>
 ```
 
 #### ✅ After (Optimized)
+
 ```tsx
-const handleAddMilestone = useCallback((goalId: string) => {
-  const title = prompt("Milestone title:");
-  const description = prompt("Milestone description:");
-  if (title && description) {
-    addMilestone(goalId, title, description, new Date());
-  }
-}, [addMilestone]);
+const handleAddMilestone = useCallback(
+  (goalId: string) => {
+    const title = prompt('Milestone title:');
+    const description = prompt('Milestone description:');
+    if (title && description) {
+      addMilestone(goalId, title, description, new Date());
+    }
+  },
+  [addMilestone],
+);
 
 // In JSX
-<Button onClick={() => handleAddMilestone(goal.id)}>
-  Add Milestone
-</Button>
+<Button onClick={() => handleAddMilestone(goal.id)}>Add Milestone</Button>;
 ```
 
 ### 4. Prevent setState in Loops
 
 #### ❌ Before (Critical Issue)
+
 ```tsx
 for (let i = 0; i < items.length; i++) {
-  setProgress(i / items.length * 100);
+  setProgress((i / items.length) * 100);
   processItem(items[i]);
 }
 ```
 
 #### ✅ After (Optimized)
+
 ```tsx
 // Batch state updates
 const updates = items.map((item, i) => ({
-  progress: i / items.length * 100,
-  result: processItem(item)
+  progress: (i / items.length) * 100,
+  result: processItem(item),
 }));
 setProgress(100);
 setResults(updates);
@@ -126,21 +145,21 @@ setResults(updates);
 ### 5. Virtual Scrolling for Large Lists
 
 #### ❌ Before (Performance Issue)
+
 ```tsx
-{items.map(item => (
-  <ItemComponent key={item.id} item={item} />
-))}
+{
+  items.map((item) => <ItemComponent key={item.id} item={item} />);
+}
 ```
 
 #### ✅ After (Using VirtualScrollArea)
+
 ```tsx
 <VirtualScrollArea
   items={items}
   itemHeight={60}
   containerHeight={600}
-  renderItem={(item, index) => (
-    <ItemComponent key={item.id} item={item} />
-  )}
+  renderItem={(item, index) => <ItemComponent key={item.id} item={item} />}
   overscan={10}
 />
 ```
@@ -148,20 +167,18 @@ setResults(updates);
 ### 6. Optimize Nested Maps (O(n²) Complexity)
 
 #### ❌ Before (Critical Issue)
+
 ```tsx
-const result = array1.map(item1 => 
-  array2.map(item2 => 
-    expensiveOperation(item1, item2)
-  )
-);
+const result = array1.map((item1) => array2.map((item2) => expensiveOperation(item1, item2)));
 ```
 
 #### ✅ After (Optimized with Memoization)
+
 ```tsx
 const operationCache = useMemo(() => {
   const cache = new Map();
-  array1.forEach(item1 => {
-    array2.forEach(item2 => {
+  array1.forEach((item1) => {
+    array2.forEach((item2) => {
       const key = `${item1.id}-${item2.id}`;
       cache.set(key, expensiveOperation(item1, item2));
     });
@@ -169,19 +186,22 @@ const operationCache = useMemo(() => {
   return cache;
 }, [array1, array2]);
 
-const result = useMemo(() => 
-  array1.map(item1 => 
-    array2.map(item2 => {
-      const key = `${item1.id}-${item2.id}`;
-      return operationCache.get(key);
-    })
-  ), [array1, array2, operationCache]
+const result = useMemo(
+  () =>
+    array1.map((item1) =>
+      array2.map((item2) => {
+        const key = `${item1.id}-${item2.id}`;
+        return operationCache.get(key);
+      }),
+    ),
+  [array1, array2, operationCache],
 );
 ```
 
 ### 7. Lazy Load Heavy Components
 
 #### ✅ Implementation
+
 ```tsx
 import { lazy, Suspense } from 'react';
 
@@ -190,16 +210,17 @@ const Visualization3D = lazy(() => import('./components/Visualization3D'));
 // In component
 <Suspense fallback={<LoadingSpinner />}>
   {showVisualization && <Visualization3D data={data} />}
-</Suspense>
+</Suspense>;
 ```
 
 ### 8. Web Worker for Heavy Computations
 
 #### ✅ Implementation (Already in use, extend pattern)
+
 ```tsx
 // Use existing useAnalyticsWorker pattern
 const { results, isAnalyzing, runAnalysis } = useAnalyticsWorker({
-  precomputeOnIdle: true // Enable idle-time precomputation
+  precomputeOnIdle: true, // Enable idle-time precomputation
 });
 
 // Offload heavy calculations
@@ -213,6 +234,7 @@ useEffect(() => {
 ## 📈 Performance Monitoring
 
 ### Custom Performance Hook
+
 ```tsx
 import { useEffect, useRef } from 'react';
 
@@ -223,11 +245,14 @@ export function useRenderTime(componentName: string) {
   useEffect(() => {
     renderCount.current++;
     const startTime = performance.now();
-    
+
     return () => {
       renderTime.current = performance.now() - startTime;
-      if (renderTime.current > 16) { // Longer than one frame
-        console.warn(`[Perf] ${componentName} render #${renderCount.current}: ${renderTime.current.toFixed(2)}ms`);
+      if (renderTime.current > 16) {
+        // Longer than one frame
+        console.warn(
+          `[Perf] ${componentName} render #${renderCount.current}: ${renderTime.current.toFixed(2)}ms`,
+        );
       }
     };
   });
@@ -235,6 +260,7 @@ export function useRenderTime(componentName: string) {
 ```
 
 ### React DevTools Profiler Integration
+
 ```tsx
 import { Profiler } from 'react';
 
@@ -246,27 +272,31 @@ function onRenderCallback(id, phase, actualDuration) {
 
 <Profiler id="AnalyticsDashboard" onRender={onRenderCallback}>
   <AnalyticsDashboard {...props} />
-</Profiler>
+</Profiler>;
 ```
 
 ## 🎯 Component-Specific Optimizations
 
 ### AnalyticsDashboard
+
 - ✅ Already using memo and useCallback
 - ⚠️ Optimize data normalization with useMemo
 - ⚠️ Consider splitting into smaller sub-components
 
 ### GoalManager
+
 - ❌ Large inline functions in onClick handlers
 - ❌ Missing memoization for callbacks
 - 🔧 Need to extract and memoize event handlers
 
 ### Visualization3D
+
 - ❌ O(n²) complexity in data processing
 - ❌ Large component (552 LOC) needs splitting
 - 🔧 Consider using React.lazy for code splitting
 
 ### CorrelationHeatmap
+
 - ❌ Missing component memoization
 - ❌ Expensive calculation without useMemo
 - ❌ Nested map operations (O(n²))
@@ -274,18 +304,21 @@ function onRenderCallback(id, phase, actualDuration) {
 ## 📋 Implementation Checklist
 
 ### Immediate Actions (Week 1)
+
 - [ ] Add React.memo to all presentational components
 - [ ] Fix setState in loops (critical performance issue)
 - [ ] Memoize expensive calculations with useMemo
 - [ ] Extract inline functions from JSX
 
 ### Short-term (Week 2-3)
+
 - [ ] Implement virtual scrolling for lists > 50 items
 - [ ] Optimize nested map operations
 - [ ] Add performance monitoring hooks
 - [ ] Split large components (> 300 LOC)
 
 ### Long-term (Month 1-2)
+
 - [ ] Implement code splitting for routes
 - [ ] Extend web worker usage for all heavy computations
 - [ ] Add performance budgets and CI checks
@@ -334,6 +367,7 @@ CI_PERF_THRESHOLD_MS=1200 npm run test:performance
 ## 📈 Expected Performance Improvements
 
 After implementing these optimizations:
+
 - 🎯 40-60% reduction in unnecessary re-renders
 - ⚡ 30-50% improvement in initial load time
 - 📊 50-70% reduction in memory usage for large datasets
@@ -341,5 +375,5 @@ After implementing these optimizations:
 
 ---
 
-*Last Updated: 2025-08-20*
-*For questions or improvements, please update this guide as patterns evolve.*
+_Last Updated: 2025-08-20_ _For questions or improvements, please update this guide as patterns
+evolve._

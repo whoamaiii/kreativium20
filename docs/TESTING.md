@@ -2,7 +2,9 @@
 
 ## Overview
 
-This project implements a comprehensive testing strategy covering unit tests, integration tests, end-to-end tests, performance benchmarks, and bias detection. All tests are designed to ensure code quality, reliability, and fairness in the analytics system.
+This project implements a comprehensive testing strategy covering unit tests, integration tests,
+end-to-end tests, performance benchmarks, and bias detection. All tests are designed to ensure code
+quality, reliability, and fairness in the analytics system.
 
 ## Test Structure
 
@@ -55,6 +57,7 @@ npm run test:coverage:watch
 ```
 
 Coverage thresholds:
+
 - Global: 85% lines, 80% branches
 - src/lib/: 90% all metrics
 - src/hooks/: 85% all metrics
@@ -100,6 +103,7 @@ CI_PERF_THRESHOLD_MS=2000 npm run test:performance
 ```
 
 Default thresholds:
+
 - Small dataset: < 150ms
 - Medium dataset: < 750ms
 - Large dataset: < 1500ms
@@ -141,6 +145,7 @@ Unit tests focus on individual components and functions in isolation:
   - Performance
 
 Example:
+
 ```typescript
 describe('Button Component', () => {
   it('renders with correct variant', () => {
@@ -159,6 +164,7 @@ Integration tests verify data flow and component interactions:
 - **API Integration**: Request/response handling, error recovery
 
 Example:
+
 ```typescript
 describe('Analytics Data Flow', () => {
   it('processes student data through pipeline', async () => {
@@ -178,6 +184,7 @@ E2E tests simulate real user journeys:
 - **Accessibility**: Keyboard navigation, screen reader support
 
 Example:
+
 ```typescript
 test('complete student onboarding flow', async ({ page }) => {
   await page.click('[data-testid="add-student-btn"]');
@@ -197,6 +204,7 @@ Performance tests ensure the application meets speed requirements:
 - **Cache Performance**: Lookup speed, invalidation
 
 Metrics tracked:
+
 - Execution time
 - Memory usage
 - Operations per second
@@ -212,6 +220,7 @@ Bias tests ensure fairness across different demographics:
 - **Intersectional Bias**: Multiple attribute combinations
 
 Fairness metrics:
+
 - Demographic parity
 - Equal opportunity
 - Equalized odds
@@ -269,6 +278,7 @@ npx vitest --ui
 ### Debug in VS Code
 
 Add to `.vscode/launch.json`:
+
 ```json
 {
   "type": "node",
@@ -341,6 +351,7 @@ PWDEBUG=1 npm run e2e
 ## Contact
 
 For testing questions or improvements:
+
 - Create an issue with `testing` label
 - Review existing test patterns
 - Consult team lead for architectural decisions
