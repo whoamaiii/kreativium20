@@ -1,5 +1,4 @@
 import { logger } from '@/lib/logger';
-import { AI_ANALYSIS_ENABLED, EXPLANATION_V2_ENABLED } from '@/lib/env';
 
 // Centralized storage keys and prefixes
 export const STORAGE_KEYS = {
@@ -152,8 +151,8 @@ export const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfiguration = {
   features: {
     enableStructuredInsights: false,
     enableSummaryFacade: true,
-    aiAnalysisEnabled: AI_ANALYSIS_ENABLED,
-    explanationV2: EXPLANATION_V2_ENABLED,
+    aiAnalysisEnabled: (() => { try { const v = ((import.meta as any)?.env?.VITE_AI_ANALYSIS_ENABLED ?? '').toString().toLowerCase(); return v === '1' || v === 'true' || v === 'yes'; } catch { return false; } })(),
+    explanationV2: (() => { try { const v = ((import.meta as any)?.env?.VITE_EXPLANATION_V2 ?? '').toString().toLowerCase(); return v === '1' || v === 'true' || v === 'yes'; } catch { return false; } })(),
   },
   
   featureEngineering: {
