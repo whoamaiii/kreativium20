@@ -14,11 +14,29 @@ let lastWorker: any = null;
 vi.mock('@/workers/analytics.worker?worker', () => {
   class MockWorker {
     onmessage: (e: any) => void = () => {};
+    onmessageerror: (e: any) => void = () => {};
     postMessage = mockPostMessage;
     terminate = mockTerminate;
+    private listeners = new Map<string, (e: any) => void>();
     constructor() {
       // eslint-disable-next-line @typescript-eslint/no-this-alias -- store instance so tests can inspect mocked worker
       lastWorker = this;
+    }
+    addEventListener(event: string, handler: (e: any) => void) {
+      this.listeners.set(event, handler);
+    }
+    removeEventListener(event: string) {
+      this.listeners.delete(event);
+    }
+    // Helpers to simulate messages via the classic properties
+    // When tests call worker.onmessage(...), the hook should still pick it up because we forward to listeners
+    set onmessageSetter(fn: (e: any) => void) {
+      this.onmessage = fn;
+      this.listeners.set('message', fn);
+    }
+    set onmessageerrorSetter(fn: (e: any) => void) {
+      this.onmessageerror = fn;
+      this.listeners.set('messageerror', fn);
     }
   }
   // Also support CJS default
