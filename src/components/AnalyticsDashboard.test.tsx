@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { TrackingEntry, EmotionEntry, SensoryEntry } from '@/types/student';
 import { render, screen } from '@testing-library/react';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { useAnalyticsWorker } from '@/hooks/useAnalyticsWorker';
+import type { Mock } from 'vitest';
 
 vi.mock('@/hooks/useAnalyticsWorker', () => ({
   useAnalyticsWorker: vi.fn(),
@@ -17,7 +19,7 @@ describe('AnalyticsDashboard', () => {
   });
 
   it('should render the dashboard with loading state', () => {
-    (useAnalyticsWorker as unknown as vi.Mock).mockReturnValue({
+    (useAnalyticsWorker as unknown as Mock).mockReturnValue({
       results: null,
       isAnalyzing: true,
       error: null,
@@ -29,12 +31,13 @@ describe('AnalyticsDashboard', () => {
     render(<AnalyticsDashboard student={student} filteredData={{ entries: [], emotions: [], sensoryInputs: [] }} />);
 
     // Expect at least one analyzing indicator present (aria-label on Suspense fallbacks)
-    expect(screen.getAllByLabelText('states.analyzing').length).toBeGreaterThan(0);
+    const analyzingEls = screen.queryAllByLabelText('states.analyzing');
+    expect(analyzingEls.length).toBeGreaterThan(0);
   });
 
 
   it('should call runAnalysis on mount with filtered data', () => {
-    (useAnalyticsWorker as unknown as vi.Mock).mockReturnValue({
+    (useAnalyticsWorker as unknown as Mock).mockReturnValue({
       results: null,
       isAnalyzing: false,
       error: null,
@@ -42,8 +45,8 @@ describe('AnalyticsDashboard', () => {
       invalidateCacheForStudent: mockInvalidateCache,
     });
 
-    const filteredData = {
-      entries: [{ id: '1', timestamp: new Date(), value: 1 }],
+    const filteredData: { entries: TrackingEntry[]; emotions: EmotionEntry[]; sensoryInputs: SensoryEntry[] } = {
+      entries: [{ id: '1', studentId: 's1', timestamp: new Date(), value: 1, emotions: [], sensoryInputs: [] } as unknown as TrackingEntry],
       emotions: [],
       sensoryInputs: [],
     };
