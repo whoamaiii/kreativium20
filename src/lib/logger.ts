@@ -1,5 +1,4 @@
 /* eslint-disable no-console -- Logger intentionally proxies to console when enabled */
-import { LOG_LEVEL_NAME, DEBUG_MODE } from '@/lib/env';
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
@@ -37,8 +36,10 @@ class Logger {
       }
     })();
     const isProd = !!(env && env.PROD);
+    const logLevelName = (env && typeof env.VITE_LOG_LEVEL === 'string') ? env.VITE_LOG_LEVEL : 'info';
+    const debugMode = !!(env && (env.MODE === 'development' || env.DEV === true));
     const mappedLevel: LogLevel | null = (() => {
-      switch (LOG_LEVEL_NAME) {
+      switch (logLevelName) {
         case 'debug': return LogLevel.DEBUG;
         case 'info': return LogLevel.INFO;
         case 'warn': return LogLevel.WARN;
@@ -48,7 +49,7 @@ class Logger {
       }
     })();
     this.config = {
-      level: mappedLevel !== null ? mappedLevel : (isProd ? LogLevel.ERROR : (DEBUG_MODE ? LogLevel.DEBUG : LogLevel.INFO)),
+      level: mappedLevel !== null ? mappedLevel : (isProd ? LogLevel.ERROR : (debugMode ? LogLevel.DEBUG : LogLevel.INFO)),
       enableConsole: mappedLevel !== LogLevel.NONE,
       enableRemote: false
     };

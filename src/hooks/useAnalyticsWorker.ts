@@ -488,7 +488,9 @@ export const useAnalyticsWorker = (options: CachedAnalyticsWorkerOptions = {}): 
       setError(null);
       
       try {
-        const results = await analyticsWorkerFallback.processAnalytics(data, { useAI: options?.useAI, student: options?.student });
+        const results = (options?.useAI === undefined && options?.student === undefined)
+          ? await analyticsWorkerFallback.processAnalytics(data)
+          : await analyticsWorkerFallback.processAnalytics(data, { useAI: options?.useAI, student: options?.student });
         setResults(results as AnalyticsResultsAI);
         // Cache the results
         const tags = extractTagsFn(data);
@@ -543,7 +545,9 @@ export const useAnalyticsWorker = (options: CachedAnalyticsWorkerOptions = {}): 
       
       // Attempt fallback processing
       try {
-        const fallbackResults = await analyticsWorkerFallback.processAnalytics(data, { useAI: options?.useAI, student: options?.student });
+        const fallbackResults = (options?.useAI === undefined && options?.student === undefined)
+          ? await analyticsWorkerFallback.processAnalytics(data)
+          : await analyticsWorkerFallback.processAnalytics(data, { useAI: options?.useAI, student: options?.student });
         setResults(fallbackResults as AnalyticsResultsAI);
         const tags = extractTagsFn(data);
         cache.set(cacheKey, fallbackResults as AnalyticsResultsAI, tags);
@@ -632,7 +636,9 @@ export const useAnalyticsWorker = (options: CachedAnalyticsWorkerOptions = {}): 
       
       // Fallback to synchronous processing
       try {
-        const fallbackResults = await analyticsWorkerFallback.processAnalytics(data, { useAI: options?.useAI, student: options?.student });
+        const fallbackResults = (options?.useAI === undefined && options?.student === undefined)
+          ? await analyticsWorkerFallback.processAnalytics(data)
+          : await analyticsWorkerFallback.processAnalytics(data, { useAI: options?.useAI, student: options?.student });
         setResults(fallbackResults as AnalyticsResultsAI);
         const tags = extractTagsFn(data);
         cache.set(cacheKey, fallbackResults as AnalyticsResultsAI, tags);
