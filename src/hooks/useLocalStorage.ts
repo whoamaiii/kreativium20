@@ -3,19 +3,22 @@ import { logger } from '@/lib/logger';
 
 export function useLocalStorage<T>(
   key: string,
-  initialValue: T
+  initialValue: T | (() => T)
 ): [T, (value: T | ((val: T) => T)) => void, () => void] {
   // State to store our value
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
-      // Get from local storage by key
-      const item = window.localStorage.getItem(key);
-      // Parse stored json or if none return initialValue
-      return item ? JSON.parse(item) : initialValue;
+      const ls = typeof window !== 'undefined' ? window.localStorage : undefined;
+      const item = ls ? ls.getItem(key) : null;
+      if (item != null) {
+        return JSON.parse(item);
+      }
+      // Support lazy init function
+      return typeof initialValue === 'function' ? (initialValue as () => T)() : initialValue;
     } catch (error) {
       // If error also return initialValue
-      logger.error(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
+      logger.error(`Error reading localStorage key "${key}": ${error instanceof Error ? error.message : String(error)}`);
+      return typeof initialValue === 'function' ? (initialValue as () => T)() : initialValue;
     }
   });
 
@@ -26,9 +29,12 @@ export function useLocalStorage<T>(
         try {
           setStoredValue(e.newValue ? JSON.parse(e.newValue) : initialValue);
         } catch (error) {
-          logger.error(`Error parsing localStorage key "${key}" on change:`, error);
+          logger.error(`Error parsing localStorage key "${key}" on change: ${error instanceof Error ? error.message : String(error)}`);
           setStoredValue(initialValue);
         }
+      } else if (e.key === null) {
+        // localStorage.clear() was called
+        setStoredValue(typeof initialValue === 'function' ? (initialValue as () => T)() : initialValue);
       }
     };
 
@@ -47,19 +53,44 @@ export function useLocalStorage<T>(
       // Save state
       setStoredValue(valueToStore);
       // Save to local storage
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        // Manually dispatch a storage event so other hook instances in the same tab update
+        try {
+          const evt = new StorageEvent('storage', {
+            key,
+            newValue: JSON.stringify(valueToStore),
+            storageArea: window.localStorage,
+          });
+          window.dispatchEvent(evt);
+        } catch {
+          // no-op in environments without StorageEvent constructor
+        }
+      }
     } catch (error) {
       // A more advanced implementation would handle the error case
-      logger.error(`Error setting localStorage key "${key}":`, error);
+      logger.error(`Error setting localStorage key "${key}": ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
   const removeValue = () => {
     try {
-      setStoredValue(initialValue);
-      window.localStorage.removeItem(key);
+      setStoredValue(typeof initialValue === 'function' ? (initialValue as () => T)() : initialValue);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(key);
+        try {
+          const evt = new StorageEvent('storage', {
+            key,
+            newValue: null,
+            storageArea: window.localStorage,
+          });
+          window.dispatchEvent(evt);
+        } catch {
+          // ignore
+        }
+      }
     } catch (error) {
-      logger.error(`Error removing localStorage key "${key}":`, error);
+      logger.error(`Error removing localStorage key "${key}": ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 

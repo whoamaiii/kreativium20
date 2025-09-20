@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import React, { Suspense } from 'react';
+import { Suspense } from "react";
 import { AnalyticsSettings } from "@/components/AnalyticsSettings";
 import { LazyChartsPanel } from '@/components/lazy/LazyChartsPanel';
 import { LazyPatternsPanel } from '@/components/lazy/LazyPatternsPanel';
@@ -29,7 +29,8 @@ import { Student, TrackingEntry, EmotionEntry, SensoryEntry } from "@/types/stud
 import { useAnalyticsWorker } from "@/hooks/useAnalyticsWorker";
 import { analyticsManager } from "@/lib/analyticsManager";
 import { useTranslation } from "@/hooks/useTranslation";
-import { analyticsExport, ExportFormat } from "@/lib/analyticsExport";
+import { analyticsExport } from "@/lib/analyticsExport";
+import type { ExportFormat } from '@/types/analytics';
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -89,7 +90,7 @@ export const AnalyticsDashboard = memo(({
   const visualizationRef = useRef<HTMLDivElement>(null);
   
   // Always call hook at top level - hooks cannot be inside try-catch
-  const { results, isAnalyzing, /* eslint-disable @typescript-eslint/no-unused-vars */ error, /* eslint-enable @typescript-eslint/no-unused-vars */ runAnalysis, invalidateCacheForStudent } = useAnalyticsWorker({ precomputeOnIdle: false });
+  const { results, isAnalyzing, runAnalysis, invalidateCacheForStudent } = useAnalyticsWorker({ precomputeOnIdle: false });
 
   // Dev-only guard
   const isDevSeedEnabled = (() => {
@@ -134,7 +135,7 @@ export const AnalyticsDashboard = memo(({
           }
           return new Date();
         } catch (error) {
-          logger.error('Error coercing timestamp:', v, error);
+          logger.error(`Error coercing timestamp: ${String(v)} - ${(error as Error)?.message ?? String(error)}`);
           return new Date();
         }
       };
@@ -146,7 +147,7 @@ export const AnalyticsDashboard = memo(({
           sensoryInputs: (d.sensoryInputs || []).map(s => ({ ...s, timestamp: coerce(s.timestamp) })),
         };
       } catch (error) {
-        logger.error('Error normalizing filteredData:', error);
+        logger.error(`Error normalizing filteredData: ${(error as Error)?.message ?? String(error)}`);
         return {
           entries: [],
           emotions: [],
@@ -156,7 +157,7 @@ export const AnalyticsDashboard = memo(({
     };
     
     if (filteredData && filteredData.entries) {
-      runAnalysis(normalize(filteredData), { useAI, student });
+      runAnalysis(normalize(filteredData));
     }
     // Ensure student analytics exists for all students, including new and mock
     analyticsManager.initializeStudentAnalytics(student.id);
@@ -173,8 +174,7 @@ export const AnalyticsDashboard = memo(({
   // useMemo hooks to prevent re-calculating derived data on every render.
   const patterns = useMemo(() => results?.patterns || [], [results]);
   const correlations = useMemo(() => results?.correlations || [], [results]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const environmentalCorrelations = useMemo(() => results?.environmentalCorrelations || results?.correlations || [], [results]);
+  // const environmentalCorrelations = useMemo(() => results?.environmentalCorrelations || results?.correlations || [], [results]);
   const insights = useMemo(() => results?.insights || [], [results]);
 
   // Decouple visualization rendering from worker readiness to avoid spinners.
@@ -263,7 +263,7 @@ export const AnalyticsDashboard = memo(({
                 }
                 return filtered;
               } catch (e) {
-                logger.error('Failed to collect chart exports', e);
+                logger.error(`Failed to collect chart exports: ${(e as Error)?.message ?? String(e)}`);
                 toast.error(String(tAnalytics('export.noCharts')));
                 return [];
               }
@@ -272,7 +272,7 @@ export const AnalyticsDashboard = memo(({
       };
 
            setExportProgress(65);
-           await analyticsExport.exportTo(format, exportData, { pdf: { chartQuality: opts?.chartQuality as any } });
+           await analyticsExport.exportTo(format, exportData, { pdf: { chartQuality: (opts as any)?.chartQuality } });
            setExportProgress(100);
            switch (format) {
              case 'pdf':
@@ -287,7 +287,7 @@ export const AnalyticsDashboard = memo(({
            }
       });
         } catch (error) {
-          logger.error('Export failed:', error);
+          logger.error(`Export failed: ${(error as Error)?.message ?? String(error)}`);
           toast.error(String(tAnalytics('export.failure')));
         }
       finally {
@@ -303,26 +303,7 @@ export const AnalyticsDashboard = memo(({
     void doExport(format);
   }, [doExport]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getPatternIcon = (type: string) => {
-    switch (type) {
-      case 'emotion':
-        return <Brain className="h-4 w-4" />;
-      case 'sensory':
-        return <Eye className="h-4 w-4" />;
-      case 'environmental':
-        return <BarChart3 className="h-4 w-4" />;
-      default:
-        return <TrendingUp className="h-4 w-4" />;
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence > 0.7) return 'text-green-600';
-    if (confidence > 0.4) return 'text-yellow-600';
-    return 'text-orange-600';
-  };
+  // Icons and color helpers inlined where needed; unused utilities removed
 
 // Track active tab synced with URL
   // URL-synced hook for persistence across reloads and deep links
@@ -538,7 +519,7 @@ export const AnalyticsDashboard = memo(({
         <TabsContent id="analytics-tabpanel" value="charts" className="space-y-6" tabIndex={-1}>
           <div ref={visualizationRef}>
             <ErrorBoundary showToast={false}>
-              <Suspense fallback={<div className="h-[360px] rounded-xl border bg-card motion-safe:animate-pulse" aria-label={String(tAnalytics('states.analyzing'))} />}> 
+              <Suspense fallback={<div className="h-[360px] rounded-xl border bg-card motion-safe:animate-pulse" aria-label={'states.analyzing'} />}> 
                 <LazyChartsPanel studentName={student.name} filteredData={filteredData} />
               </Suspense>
             </ErrorBoundary>
@@ -547,7 +528,7 @@ export const AnalyticsDashboard = memo(({
 
         <TabsContent value="patterns" className="space-y-6" aria-busy={isAnalyzing}>
           <ErrorBoundary showToast={false}>
-            <Suspense fallback={<div className="h-[280px] rounded-xl border bg-card motion-safe:animate-pulse" aria-label={String(tAnalytics('states.analyzing'))} />}> 
+            <Suspense fallback={<div className="h-[280px] rounded-xl border bg-card motion-safe:animate-pulse" aria-label={'states.analyzing'} />}> 
               <LazyPatternsPanel filteredData={filteredData} useAI={useAI} student={student} />
             </Suspense>
           </ErrorBoundary>
@@ -555,7 +536,7 @@ export const AnalyticsDashboard = memo(({
 
         <TabsContent value="correlations" className="space-y-6">
           <ErrorBoundary showToast={false}>
-            <Suspense fallback={<div className="h-[420px] rounded-xl border bg-card motion-safe:animate-pulse" aria-label={String(tAnalytics('states.analyzing'))} />}> 
+            <Suspense fallback={<div className="h-[420px] rounded-xl border bg-card motion-safe:animate-pulse" aria-label={'states.analyzing'} />}> 
               <LazyCorrelationsPanel filteredData={filteredData} />
             </Suspense>
           </ErrorBoundary>
@@ -563,7 +544,7 @@ export const AnalyticsDashboard = memo(({
 
         <TabsContent value="alerts" className="space-y-6">
           <ErrorBoundary showToast={false}>
-            <Suspense fallback={<div className="h-[200px] rounded-xl border bg-card motion-safe:animate-pulse" aria-label={String(tAnalytics('states.analyzing'))} />}> 
+            <Suspense fallback={<div className="h-[200px] rounded-xl border bg-card motion-safe:animate-pulse" aria-label={'states.analyzing'} />}> 
               <LazyAlertsPanel filteredData={filteredData} studentId={student.id} />
             </Suspense>
           </ErrorBoundary>
@@ -577,7 +558,7 @@ export const AnalyticsDashboard = memo(({
             // Invalidate cache for this student when config changes
             invalidateCacheForStudent(student.id);
             // Re-run analysis with new configuration
-            runAnalysis(filteredData, { useAI, student });
+            runAnalysis(filteredData);
           }}
           onClose={() => setShowSettings(false)}
         />
@@ -620,7 +601,7 @@ export const AnalyticsDashboard = memo(({
          
          return prevTime === nextTime;
        } catch (error) {
-         logger.error('Error comparing timestamps in AnalyticsDashboard memo:', error);
+         logger.error(`Error comparing timestamps in AnalyticsDashboard memo: ${(error as Error)?.message ?? String(error)}`);
          return false;
        }
      })())

@@ -1,11 +1,4 @@
-import { 
-  AI_ANALYSIS_ENABLED,
-  AI_MODEL_NAME,
-  AI_TEMPERATURE,
-  AI_MAX_TOKENS,
-  OPENROUTER_API_KEY,
-  AI_LOCAL_ONLY,
-} from '@/lib/env';
+// Read environment via import.meta.env; avoid hard coupling to env named exports for testability
 import { logger } from '@/lib/logger';
 
 export interface AiConfig {
@@ -40,14 +33,14 @@ export const CANONICAL_ALLOWED_MODELS = [
 ] as const;
 
 export const DEFAULT_AI_CONFIG: AiConfig = {
-  enabled: AI_ANALYSIS_ENABLED,
-  modelName: AI_MODEL_NAME,
-  temperature: clamp(AI_TEMPERATURE, 0, 2),
-  maxTokens: AI_MAX_TOKENS > 0 ? AI_MAX_TOKENS : 1024,
+  enabled: (() => { try { const v = ((import.meta as any)?.env?.VITE_AI_ANALYSIS_ENABLED ?? '').toString().toLowerCase(); return v === '1' || v === 'true' || v === 'yes'; } catch { return false; } })(),
+  modelName: (() => { try { const v = (import.meta as any)?.env?.VITE_AI_MODEL_NAME; return typeof v === 'string' && v.trim().length > 0 ? v : 'gpt-4o-mini'; } catch { return 'gpt-4o-mini'; } })(),
+  temperature: (() => { try { const raw = (import.meta as any)?.env?.VITE_AI_TEMPERATURE; const n = typeof raw === 'string' ? parseFloat(raw) : Number(raw); return clamp(Number.isFinite(n) ? n : 0.2, 0, 2); } catch { return 0.2; } })(),
+  maxTokens: (() => { try { const raw = (import.meta as any)?.env?.VITE_AI_MAX_TOKENS; const n = typeof raw === 'string' ? parseInt(raw, 10) : Number(raw); return Number.isFinite(n) && n > 0 ? n : 1024; } catch { return 1024; } })(),
   topP: 1.0,
   timeoutMs: 30_000,
   allowedModels: Array.from(new Set([
-    AI_MODEL_NAME,
+    (() => { try { const v = (import.meta as any)?.env?.VITE_AI_MODEL_NAME; return typeof v === 'string' && v.trim().length > 0 ? v : 'gpt-4o-mini'; } catch { return 'gpt-4o-mini'; } })(),
     'gpt-5',
     'gpt-5-mini',
     'gpt-4o-mini',
@@ -55,9 +48,9 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     'claude-3.5-sonnet',
     'openai/gpt-5-mini',
   ])),
-  apiKey: OPENROUTER_API_KEY || undefined,
+  apiKey: (() => { try { const v = (import.meta as any)?.env?.VITE_OPENROUTER_API_KEY; return typeof v === 'string' && v.trim().length > 0 ? v : undefined; } catch { return undefined; } })(),
   baseUrl: undefined,
-  localOnly: AI_LOCAL_ONLY,
+  localOnly: (() => { try { const v = ((import.meta as any)?.env?.VITE_AI_LOCAL_ONLY ?? '').toString().toLowerCase(); return v === '1' || v === 'true' || v === 'yes'; } catch { return false; } })(),
 };
 
 /**
@@ -77,7 +70,7 @@ export function loadAiConfig(overrides?: Partial<AiConfig>): AiConfig {
     : DEFAULT_AI_CONFIG.modelName;
   const apiKey = typeof env.VITE_OPENROUTER_API_KEY === 'string' && (env.VITE_OPENROUTER_API_KEY as string).trim().length > 0
     ? (env.VITE_OPENROUTER_API_KEY as string)
-    : (OPENROUTER_API_KEY || undefined);
+    : undefined;
   const baseUrl = typeof env.VITE_AI_BASE_URL === 'string' && (env.VITE_AI_BASE_URL as string).trim().length > 0
     ? (env.VITE_AI_BASE_URL as string)
     : 'https://openrouter.ai/api/v1';
