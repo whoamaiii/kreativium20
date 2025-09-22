@@ -32,7 +32,7 @@ const TrackStudent = () => {
     if (foundStudent) {
       setStudent(foundStudent);
     } else {
-      toast.error(String(tTracking('session.validationError')));
+      toast.error(String(tCommon('student_not_found')));
       navigate('/');
     }
   }, [studentId, navigate, tTracking]);
@@ -156,10 +156,10 @@ const TrackStudent = () => {
           <div className="flex items-center gap-4 text-sm text-primary-foreground">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span>{String(tTracking('session.emotionsRecorded')).replace('{{count}}', emotions.length.toString())}</span>
+              <span>{String(tTracking('session.emotionsRecorded', { count: emotions.length }))}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span>{String(tTracking('session.sensoryInputsRecorded')).replace('{{count}}', sensoryInputs.length.toString())}</span>
+              <span>{String(tTracking('session.sensoryInputsRecorded', { count: sensoryInputs.length }))}</span>
             </div>
           </div>
         </div>

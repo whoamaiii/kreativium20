@@ -70,12 +70,12 @@ export interface EnvironmentalEntry {
     noiseLevel?: number;
   };
   weather?: {
-    condition: 'sunny' | 'cloudy' | 'rainy' | 'stormy' | 'snowy';
+    condition: 'sunny' | 'cloudy' | 'rainy' | 'snowy';
     temperature?: number;
     pressure?: number;
   };
   classroom?: {
-    activity?: 'instruction' | 'transition' | 'free-time' | 'testing' | 'group-work';
+    activity?: 'low' | 'moderate' | 'high';
     studentCount?: number;
     timeOfDay?: 'morning' | 'afternoon' | 'evening';
   };

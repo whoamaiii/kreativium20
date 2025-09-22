@@ -25,7 +25,7 @@ export const LanguageSettings = () => {
           variant="ghost"
           size="sm"
           aria-label={currentLanguage === 'nb' ? String(tCommon('language.norwegian')) : String(tCommon('language.english'))}
-          title={String(tCommon('language.change'))}
+          title={String(tCommon('language.changeLanguage'))}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <Globe className="h-4 w-4" />

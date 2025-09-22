@@ -97,7 +97,8 @@ const EnhancedTrackStudent = () => {
       ...sensory
     };
     setSessionSensoryInputs(prev => [...prev, newSensory]);
-    toast.success(String(tTracking('sensory.added', { type: sensory.type, response: sensory.response })));
+    const sensedType = (sensory as any).type ?? (sensory as any).sensoryType;
+    toast.success(String(tTracking('sensory.added', { type: sensedType, response: sensory.response })));
   };
 
   const handleSaveSession = async () => {
