@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import {
   X
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { toast } from "sonner";
 
 interface EnvironmentalTrackerProps {
   onEnvironmentalAdd: (entry: Omit<EnvironmentalEntry, 'id' | 'timestamp'>) => void;
@@ -49,7 +51,7 @@ export const EnvironmentalTracker = ({ onEnvironmentalAdd, studentId }: Environm
 
   const handleSubmit = () => {
     if (!lighting || !classroomActivity || !weather || !timeOfDay) {
-      toast.error('Please fill out all required fields (lighting, activity, weather, time of day).');
+      toast.error(String(tTracking('environmental.requiredError')));
       return;
     }
 
@@ -83,7 +85,7 @@ export const EnvironmentalTracker = ({ onEnvironmentalAdd, studentId }: Environm
     setNotes('');
   };
 
-  const isFormValid = lighting && classroomActivity && weather && timeOfDay;
+  const isFormValid = Boolean(lighting && classroomActivity && weather && timeOfDay);
 
   return (
     <Card className="w-full">
@@ -98,7 +100,7 @@ export const EnvironmentalTracker = ({ onEnvironmentalAdd, studentId }: Environm
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground flex items-center gap-2">
             <Thermometer className="h-4 w-4" />
-            {String(tTracking('environmental.temperature'))}: {roomTemperature}°C
+            {String(tTracking('environmental.temperatureLabel'))}: {roomTemperature}°C
           </Label>
           <Slider
             value={[roomTemperature]}
@@ -118,11 +120,11 @@ export const EnvironmentalTracker = ({ onEnvironmentalAdd, studentId }: Environm
         <div className="space-y-2">
           <Label className="text-sm font-medium text-foreground flex items-center gap-2">
             <Sun className="h-4 w-4" />
-            {String(tTracking('environmental.lighting'))}
+            {String(tTracking('environmental.lightingLabel'))}
           </Label>
           <Select value={lighting} onValueChange={setLighting}>
             <SelectTrigger>
-              <SelectValue placeholder={String(tTracking('environmental.lighting'))} />
+              <SelectValue placeholder={String(tTracking('environmental.lightingLabel'))} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="bright">{String(tTracking('environmental.lighting.bright'))}</SelectItem>
@@ -234,7 +236,7 @@ export const EnvironmentalTracker = ({ onEnvironmentalAdd, studentId }: Environm
               placeholder={String(tTracking('environmental.specialEventsPlaceholder'))}
               aria-label={String(tTracking('environmental.specialEvents'))}
               className="flex-1 px-3 py-2 border border-border rounded-md bg-input text-sm"
-              onKeyPress={(e) => e.key === 'Enter' && handleAddSpecialEvent()}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddSpecialEvent()}
             />
             <Button onClick={handleAddSpecialEvent} size="sm" type="button">
               <Plus className="h-4 w-4" />

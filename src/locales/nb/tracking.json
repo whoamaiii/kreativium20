@@ -26,11 +26,30 @@
     "addEmotion": "Legg til følelse",
     "added": "La til {{emotion}} (intensitet {{intensity}})",
     "selectEmotion": "Velg følelse",
+    "subEmotionLabel": "Spesifikk følelse (valgfritt)",
+    "selectSubEmotionAria": "Velg {{subEmotion}}",
     "intensity": "Intensitet",
     "outOf": "/{{max}}",
     "context": "Kontekst",
     "duration": "Varighet",
+    "durationMinutes": "Varighet (minutter)",
+    "durationPlaceholder": "Hvor lenge varte det?",
+    "durationAriaLabel": "Varighet i minutter",
+    "durationHelp": "Oppgi varighet i minutter mellom 0 og 999.",
     "notes": "Notater",
+    "notesPlaceholder": "Ytterligere observasjoner...",
+    "escalation": {
+      "label": "Hvordan utviklet det seg?",
+      "sudden": "Plutselig",
+      "gradual": "Gradvis",
+      "unknown": "Ukjent"
+    },
+    "triggers": {
+      "label": "Utløsere (valgfritt)",
+      "placeholder": "Legg til en utløser...",
+      "ariaAddLabel": "Legg til ny utløser",
+      "remove": "Fjern utløser {{trigger}}"
+    },
     "types": {
       "happy": "Glad",
       "sad": "Trist",
@@ -65,6 +84,18 @@
     "response": "Respons",
     "intensity": "Intensitet",
     "notes": "Notater",
+    "notesPlaceholder": "Ytterligere observasjoner om den sensoriske responsen...",
+    "environment": {
+      "label": "Miljø (valgfritt)",
+      "placeholder": "f.eks. Klasserom, Lekeplass, Bibliotek...",
+      "ariaLabel": "Beskriv miljøet"
+    },
+    "coping": {
+      "placeholder": "Legg til en mestringsstrategi...",
+      "ariaAddLabel": "Legg til mestringsstrategi",
+      "addSuggestion": "Legg til forslag {{strategy}}",
+      "remove": "Fjern mestringsstrategi {{strategy}}"
+    },
     "types": {
       "visual": "Visuell",
       "auditory": "Auditiv",
@@ -91,11 +122,12 @@
   "environmental": {
     "title": "Miljødata",
     "noiseLevel": "Støynivå",
-    "lighting": "Belysning",
+    "lightingLabel": "Belysning",
     "crowdLevel": "Folkemengde",
-    "temperature": "Temperatur",
+    "temperatureLabel": "Temperatur",
     "notes": "Miljønotater",
     "notesPlaceholder": "Beskriv miljøfaktorer som kan påvirke eleven...",
+    "requiredError": "Fyll ut alle obligatoriske felt (belysning, aktivitet, vær, tid på dagen).",
     "levels": {
       "low": "Lav",
       "moderate": "Moderat",

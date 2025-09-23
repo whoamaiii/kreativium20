@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -128,7 +129,7 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
         {/* Sub-emotion Selection */}
         {selectedEmotion && subEmotions[selectedEmotion] && (
           <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Specific Feeling (Optional)</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3">{String(tTracking('emotions.subEmotionLabel'))}</h3>
             <div className="flex flex-wrap gap-2">
               {subEmotions[selectedEmotion].map((subEmotion) => (
                 <Badge
@@ -139,8 +140,8 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
                   role="button"
                   tabIndex={0}
                   aria-pressed={selectedSubEmotion === subEmotion}
-                  aria-label={`Select ${subEmotion}`}
-                  onKeyDown={(e) => {
+                  aria-label={String(tTracking('emotions.selectSubEmotionAria', { subEmotion }))}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       setSelectedSubEmotion(selectedSubEmotion === subEmotion ? '' : subEmotion);
@@ -184,12 +185,12 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
         {/* Duration */}
         {selectedEmotion && (
           <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Duration (minutes)</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3">{String(tTracking('emotions.durationMinutes'))}</h3>
             <div className="flex gap-2">
               <input
                 type="number"
                 value={duration}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   const value = e.target.value;
                   // Allow empty string for better UX while typing
                   if (value === '') {
@@ -202,13 +203,14 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
                     setDuration(Math.max(0, Math.min(999, parsed))); // Cap at 999 minutes
                   }
                 }}
-                placeholder="How long did it last?"
+                placeholder={String(tTracking('emotions.durationPlaceholder'))}
                 className="w-32 px-3 py-2 border border-border rounded-lg font-dyslexia bg-input focus:ring-2 focus:ring-ring focus:border-transparent"
                 min="0"
                 max="999"
-                aria-label="Duration in minutes"
+                aria-label={String(tTracking('emotions.durationAriaLabel'))}
                 aria-describedby="duration-help"
               />
+              <span id="duration-help" className="sr-only">{String(tTracking('emotions.durationHelp'))}</span>
               <div className="flex gap-1">
                 {[5, 15, 30, 60].map((minutes) => (
                   <Button
@@ -229,7 +231,7 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
         {/* Escalation Pattern */}
         {selectedEmotion && (
           <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">How did it develop?</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3">{String(tTracking('emotions.escalation.label'))}</h3>
             <div className="flex gap-2">
               <Button
                 variant={escalationPattern === 'sudden' ? "default" : "outline"}
@@ -237,7 +239,7 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
                 onClick={() => setEscalationPattern('sudden')}
                 className="font-dyslexia"
               >
-                Sudden
+                {String(tTracking('emotions.escalation.sudden'))}
               </Button>
               <Button
                 variant={escalationPattern === 'gradual' ? "default" : "outline"}
@@ -245,7 +247,7 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
                 onClick={() => setEscalationPattern('gradual')}
                 className="font-dyslexia"
               >
-                Gradual
+                {String(tTracking('emotions.escalation.gradual'))}
               </Button>
               <Button
                 variant={escalationPattern === 'unknown' ? "default" : "outline"}
@@ -253,7 +255,7 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
                 onClick={() => setEscalationPattern('unknown')}
                 className="font-dyslexia"
               >
-                Unknown
+                {String(tTracking('emotions.escalation.unknown'))}
               </Button>
             </div>
           </div>
@@ -261,15 +263,15 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
 
         {/* Triggers */}
         <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Utløsere (Valgfritt)</h3>
+          <h3 className="text-sm font-medium text-foreground mb-3">{String(tTracking('emotions.triggers.label'))}</h3>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
               value={newTrigger}
-              onChange={(e) => setNewTrigger(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddTrigger()}
-              placeholder="Legg til en utløser..."
-              aria-label="Legg til ny utløser"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTrigger(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleAddTrigger()}
+              placeholder={String(tTracking('emotions.triggers.placeholder'))}
+              aria-label={String(tTracking('emotions.triggers.ariaAddLabel'))}
               className="flex-1 px-3 py-2 border border-border rounded-lg font-dyslexia bg-input focus:ring-2 focus:ring-ring focus:border-transparent"
             />
             <Button onClick={handleAddTrigger} size="sm" variant="outline">
@@ -283,6 +285,8 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
                 variant="secondary"
                 className="font-dyslexia cursor-pointer"
                 onClick={() => handleRemoveTrigger(trigger)}
+                role="button"
+                aria-label={String(tTracking('emotions.triggers.remove', { trigger }))}
               >
                 {trigger} ×
               </Badge>
@@ -295,8 +299,8 @@ export const EmotionTracker = ({ onEmotionAdd, studentId }: EmotionTrackerProps)
           <h3 className="text-sm font-medium text-foreground mb-3">{String(tTracking('emotions.notes'))}</h3>
           <Textarea
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ytterligere observasjoner..."
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
+            placeholder={String(tTracking('emotions.notesPlaceholder'))}
             className="font-dyslexia bg-input border-border focus:ring-ring"
             rows={3}
           />

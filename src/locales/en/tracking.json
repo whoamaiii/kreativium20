@@ -26,11 +26,30 @@
     "addEmotion": "Add Emotion",
     "added": "Added {{emotion}} (intensity {{intensity}})",
     "selectEmotion": "Select emotion",
+    "subEmotionLabel": "Specific feeling (optional)",
+    "selectSubEmotionAria": "Select {{subEmotion}}",
     "intensity": "Intensity",
     "outOf": "/{{max}}",
     "context": "Context",
     "duration": "Duration",
+    "durationMinutes": "Duration (minutes)",
+    "durationPlaceholder": "How long did it last?",
+    "durationAriaLabel": "Duration in minutes",
+    "durationHelp": "Enter the duration in minutes between 0 and 999.",
     "notes": "Notes",
+    "notesPlaceholder": "Additional observations...",
+    "escalation": {
+      "label": "How did it develop?",
+      "sudden": "Sudden",
+      "gradual": "Gradual",
+      "unknown": "Unknown"
+    },
+    "triggers": {
+      "label": "Triggers (Optional)",
+      "placeholder": "Add a trigger...",
+      "ariaAddLabel": "Add a new trigger",
+      "remove": "Remove trigger {{trigger}}"
+    },
     "types": {
       "happy": "Happy",
       "sad": "Sad",
@@ -65,6 +84,18 @@
     "response": "Response",
     "intensity": "Intensity",
     "notes": "Notes",
+    "notesPlaceholder": "Additional observations about the sensory response...",
+    "environment": {
+      "label": "Environment (Optional)",
+      "placeholder": "e.g., Classroom, Playground, Library...",
+      "ariaLabel": "Describe the environment"
+    },
+    "coping": {
+      "placeholder": "Add a coping strategy...",
+      "ariaAddLabel": "Add coping strategy",
+      "addSuggestion": "Add suggestion {{strategy}}",
+      "remove": "Remove coping strategy {{strategy}}"
+    },
     "types": {
       "visual": "Visual",
       "auditory": "Auditory",
@@ -91,11 +122,12 @@
   "environmental": {
     "title": "Environmental Data",
     "noiseLevel": "Noise Level",
-    "lighting": "Lighting",
+    "lightingLabel": "Lighting",
     "crowdLevel": "Crowd Level",
-    "temperature": "Temperature",
+    "temperatureLabel": "Temperature",
     "notes": "Environmental Notes",
     "notesPlaceholder": "Describe environmental factors that may affect the student...",
+    "requiredError": "Please fill out all required fields (lighting, activity, weather, time of day).",
     "levels": {
       "low": "Low",
       "moderate": "Moderate",
