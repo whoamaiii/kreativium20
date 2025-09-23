@@ -48,53 +48,53 @@ export function EntryDetailsDrawer({ open, onOpenChange, source }: EntryDetailsD
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="max-w-md w-full">
         <SheetHeader>
-          <SheetTitle>Detaljer</SheetTitle>
+          <SheetTitle>{source ? `${source.activity || source.place || 'Hendelse'} / ${source.place || ''}`.replace(/\s+\/\s+$/, '') : 'Ingen kilde valgt'}</SheetTitle>
         </SheetHeader>
         {!source && (
           <div className="mt-4 text-sm text-muted-foreground">Ingen data</div>
         )}
         {source && (
           <div className="mt-4 space-y-3">
-            <div>
-              <div className="text-sm font-medium">{source.activity || source.place || 'Hendelse'}</div>
+            <section aria-labelledby="details-heading">
+              <h3 id="details-heading" className="text-sm font-medium">{source.activity || source.place || 'Hendelse'}</h3>
               <div className="text-xs text-muted-foreground">{ts}</div>
-            </div>
+            </section>
             {source.note && (
-              <div className="text-sm">
-                <div className="font-medium">Notat</div>
+              <section aria-labelledby="note-heading" className="text-sm">
+                <h3 id="note-heading" className="font-medium">Notat</h3>
                 <div className="whitespace-pre-wrap break-words">{source.note}</div>
-              </div>
+              </section>
             )}
             {source.emotions?.length ? (
-              <div>
-                <div className="text-sm font-medium">Følelser</div>
+              <section aria-labelledby="emotions-heading">
+                <h3 id="emotions-heading" className="text-sm font-medium">Følelser</h3>
                 <ul className="mt-1 text-sm list-disc pl-5">
                   {source.emotions.map((e) => (
                     <li key={e.id}>{e.emotion}{typeof e.intensity === 'number' ? ` (intensitet ${e.intensity})` : ''}{e.notes ? ` – ${e.notes}` : ''}</li>
                   ))}
                 </ul>
-              </div>
+              </section>
             ) : null}
             {source.sensory?.length ? (
-              <div>
-                <div className="text-sm font-medium">Sensorikk</div>
+              <section aria-labelledby="sensory-heading">
+                <h3 id="sensory-heading" className="text-sm font-medium">Sensorikk</h3>
                 <ul className="mt-1 text-sm list-disc pl-5">
                   {source.sensory.map((s) => (
                     <li key={s.id}>{s.type || s.response || 'sensor'}{s.response ? `: ${s.response}` : ''}{typeof s.intensity === 'number' ? ` (intensitet ${s.intensity})` : ''}{s.notes ? ` – ${s.notes}` : ''}</li>
                   ))}
                 </ul>
-              </div>
+              </section>
             ) : null}
             {(source.place || source.socialContext || source.environment) ? (
-              <div>
-                <div className="text-sm font-medium">Kontekst</div>
+              <section aria-labelledby="environment-heading">
+                <h3 id="environment-heading" className="text-sm font-medium">Miljødetaljer</h3>
                 <div className="text-sm text-muted-foreground">
                   {[source.place, source.socialContext].filter(Boolean).join(' · ')}
                 </div>
                 {source.environment && (
                   <div className="mt-1 text-sm text-muted-foreground">
                     {source.environment.lighting ? `Lys: ${source.environment.lighting}. ` : ''}
-                    {typeof source.environment.noiseLevel === 'number' ? `Støy: ${source.environment.noiseLevel}. ` : ''}
+                    {typeof source.environment.noiseLevel === 'number' ? `Støynivå: ${source.environment.noiseLevel}. ` : ''}
                     {typeof source.environment.temperature === 'number' ? `Temperatur: ${source.environment.temperature}. ` : ''}
                     {typeof source.environment.humidity === 'number' ? `Fukt: ${source.environment.humidity}. ` : ''}
                     {typeof source.environment.studentCount === 'number' ? `Elever: ${source.environment.studentCount}. ` : ''}
@@ -102,10 +102,10 @@ export function EntryDetailsDrawer({ open, onOpenChange, source }: EntryDetailsD
                     {source.environment.weather ? `Vær: ${source.environment.weather}. ` : ''}
                   </div>
                 )}
-              </div>
+              </section>
             ) : null}
             <div className="pt-2">
-              <Button variant="outline" size="sm" onClick={copyAsText}>Kopier som tekst</Button>
+              <Button aria-label="Kopier kilde som tekst" variant="outline" size="sm" onClick={copyAsText}>Kopier som tekst</Button>
             </div>
           </div>
         )}

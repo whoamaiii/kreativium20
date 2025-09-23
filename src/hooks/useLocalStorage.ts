@@ -1,65 +1,100 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { logger } from '@/lib/logger';
 
 export function useLocalStorage<T>(
   key: string,
-  initialValue: T
+  initialValue: T | (() => T)
 ): [T, (value: T | ((val: T) => T)) => void, () => void] {
-  // State to store our value
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      // Get from local storage by key
-      const item = window.localStorage.getItem(key);
-      // Parse stored json or if none return initialValue
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      // If error also return initialValue
-      logger.error(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
-    }
-  });
+  // Keep a stable copy of initialValue (functions should be called lazily)
+  const initialRef = useRef(initialValue);
 
-  // Listen for changes to this key in other tabs
+  const getInitial = (): T => {
+    try {
+      const raw = window?.localStorage?.getItem(key);
+      if (raw != null) return JSON.parse(raw) as T;
+    } catch (error) {
+      logger.error(`Error reading localStorage key "${key}":`, error as unknown as Error);
+    }
+    const iv = initialRef.current;
+    return typeof iv === 'function' ? (iv as () => T)() : (iv as T);
+  };
+
+  const getDefault = (): T => {
+    const iv = initialRef.current;
+    return typeof iv === 'function' ? (iv as () => T)() : (iv as T);
+  };
+
+  const [storedValue, setStoredValue] = useState<T>(getInitial);
+
+  // Listen for changes to this key in other tabs and global clear events
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === key) {
-        try {
-          setStoredValue(e.newValue ? JSON.parse(e.newValue) : initialValue);
-        } catch (error) {
-          logger.error(`Error parsing localStorage key "${key}" on change:`, error);
-          setStoredValue(initialValue);
+      try {
+        if (e.key === key) {
+          setStoredValue(e.newValue != null ? JSON.parse(e.newValue) : getInitial());
+          return;
         }
+        // Handle storage clear (e.key === null)
+        if (e.key === null) {
+          // Treat global clear as reset to default for this key, regardless of current storage contents
+          setStoredValue(getDefault());
+        }
+      } catch (error) {
+        logger.error(`Error parsing localStorage key "${key}" on change:`, error as unknown as Error);
+        setStoredValue(getInitial());
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [key, initialValue]);
+  }, [key]);
 
-  // Return a wrapped version of useState's setter function that persists the new value to localStorage
+  // Persist to localStorage and broadcast to same-tab listeners
   const setValue = (value: T | ((val: T) => T)) => {
     try {
-      // Allow value to be a function so we have the same API as useState
       const valueToStore = value instanceof Function ? value(storedValue) : value;
-      // Save state
+      // Avoid unnecessary updates
+      if (Object.is(valueToStore, storedValue)) return;
+
       setStoredValue(valueToStore);
-      // Save to local storage
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      window?.localStorage?.setItem(key, JSON.stringify(valueToStore));
+
+      // Manually dispatch a storage event for same-tab synchronization
+      try {
+        const evt = new StorageEvent('storage', {
+          key,
+          newValue: JSON.stringify(valueToStore),
+          storageArea: window?.localStorage ?? null,
+        });
+        window.dispatchEvent(evt);
+      } catch {
+        // ignore if StorageEvent cannot be constructed in this environment
+      }
     } catch (error) {
-      // A more advanced implementation would handle the error case
-      logger.error(`Error setting localStorage key "${key}":`, error);
+      logger.error(`Error setting localStorage key "${key}":`, error as unknown as Error);
     }
   };
 
   const removeValue = () => {
     try {
-      setStoredValue(initialValue);
-      window.localStorage.removeItem(key);
+      const next = getDefault();
+      setStoredValue(next);
+      window?.localStorage?.removeItem(key);
+      // Broadcast clear for this key to same-tab listeners
+      try {
+        const evt = new StorageEvent('storage', {
+          key,
+          newValue: null,
+          storageArea: window?.localStorage ?? null,
+        });
+        window.dispatchEvent(evt);
+      } catch {
+        // ignore
+      }
     } catch (error) {
-      logger.error(`Error removing localStorage key "${key}":`, error);
+      logger.error(`Error removing localStorage key "${key}":`, error as unknown as Error);
     }
   };
 
